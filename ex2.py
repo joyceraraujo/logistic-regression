@@ -10,10 +10,13 @@ Created on Mon Aug 24 22:53:53 2020
 # useful libraries
 import numpy as np
 import pandas as pd 
+from scipy.optimize import fmin_bfgs
 #from sklearn.preprocessing import StandardScaler
 import Plotting
 import Sklearn
-import Metrics    
+import Metrics   
+import CostGradient_LR
+ 
 def getting_data(data_file):
     
     df_data =  pd.read_csv(data_file, sep=",", header=None)
@@ -33,7 +36,7 @@ data_file = "ex2data1.txt"
 X,y = getting_data(data_file)
 Plotting.plot_data_classification(X,y)
 
-#PART 1 : using logistic regression from sklearn
+#PART 1 : using logistic regression from sklearn. Note that regularization is applied by default
 
 X_train, X_test, y_train, y_test = Sklearn.split_dataSet(X, y)
 
@@ -47,4 +50,20 @@ Metrics.metrics(y_test, y_pred)
 #Probability estimates
 particular_student = np.array([[45,85]])
 prob = reg.predict_proba(particular_student)
+print(" admission probability of:",prob)
+
+#PART 2 : using gradient descent
+print("# 2) Method : logistic regression by using fmin_bfgs")
+X = np.insert(X,0,values=1, axis=1)
+m,n = X.shape
+#initial_theta = 0.1* np.random.randn(3)
+initial_theta = 0.1* np.zeros(3) # to test cost function
+#cost_initial = CostGradient_LR.cost(initial_theta,X,y) # to test cost function
+#print(cost_initial) # to test cost function
+gradient_initial = CostGradient_LR.gradient_cost(initial_theta,X,y)
+result = fmin_bfgs(CostGradient_LR.cost,initial_theta,fprime=CostGradient_LR.gradient_cost, args = (X,y))
+cost_final = CostGradient_LR.cost(result,X,y) # to test cost function
+print(cost_final) # to test cost function
+particular_student = np.insert(particular_student,0,values=1, axis=1)
+prob = CostGradient_LR.hypothesis(result, particular_student)
 print(" admission probability of:",prob)
